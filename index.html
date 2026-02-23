@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>AI Condemnation Stress Test</title>
+  <style>
+    :root{
+      --ink:#0b1220;
+      --muted:#51607a;
+      --panel:#ffffffd9;
+      --panelBorder:#dce5f3;
+      --line-dim:#bfcde6;
+
+      --electric:#2b7cff;
+      --crimson:#c1121f;
+
+      --env:#16a34a;
+      --lazy:#2563eb;
+      --jobs:#f59e0b;
+      --art:#db2777;
+      --corp:#7c3aed;
+      --truth:#ef4444;
+
+      --panelAccent: rgba(43,124,255,0.35);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    /* ======== ACADEMIC SATIRE BACKGROUND (VISIBLE + SUBTLE) ======== */
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      overflow:hidden;
+      position:relative;
+
+      /* Soft “designed” base: icy blues + gentle tints */
+      background:
+        radial-gradient(1200px 700px at 20% 0%, #eaf4ff 0%, transparent 60%),
+        radial-gradient(1000px 650px at 100% 30%, #f2ecff 0%, transparent 58%),
+        radial-gradient(900px 600px at 0% 100%, #ecfff7 0%, transparent 55%),
+        linear-gradient(135deg, #f6fbff 0%, #eef5ff 60%, #ffffff 100%);
+    }
+
+    /* Circuit overlay (static base) */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-80px;
+      pointer-events:none;
+      user-select:none;
+      opacity:0.11; /* boosted so you can actually see it */
+      z-index:0;
+
+      background-image:
+        /* nodes */
+        radial-gradient(circle at 18px 18px, rgba(43,124,255,0.28) 2px, transparent 3px),
+        radial-gradient(circle at 86px 42px, rgba(43,124,255,0.20) 1.6px, transparent 3px),
+        radial-gradient(circle at 48px 92px, rgba(43,124,255,0.20) 1.6px, transparent 3px),
+
+        /* traces */
+        linear-gradient(rgba(43,124,255,0.20) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(43,124,255,0.20) 1px, transparent 1px),
+
+        /* big faint “chip” circles */
+        radial-gradient(circle at 72% 28%, rgba(43,124,255,0.12) 0 2px, transparent 7px),
+        radial-gradient(circle at 30% 75%, rgba(43,124,255,0.12) 0 2px, transparent 7px);
+
+      background-size:
+        120px 120px,
+        240px 240px,
+        240px 240px,
+        64px 64px,
+        64px 64px,
+        320px 320px,
+        360px 360px;
+
+      background-position: 0 0;
+      filter: blur(0.2px);
+      transform: rotate(-3deg);
+    }
+
+    /* Faint animated circuitry pulse (moving shimmer + slow “current”) */
+    body::after{
+      content:"";
+      position:fixed;
+      inset:-120px;
+      pointer-events:none;
+      user-select:none;
+      z-index:1;
+      opacity:0.18;
+
+      /* two-layer shimmer: diagonal sweep + subtle grid bloom */
+      background:
+        linear-gradient(120deg,
+          rgba(43,124,255,0.00) 0%,
+          rgba(43,124,255,0.06) 35%,
+          rgba(43,124,255,0.16) 50%,
+          rgba(43,124,255,0.06) 65%,
+          rgba(43,124,255,0.00) 100%),
+        radial-gradient(700px 480px at 40% 45%,
+          rgba(43,124,255,0.10) 0%,
+          rgba(43,124,255,0.00) 65%);
+
+      mix-blend-mode: multiply;
+      animation: circuitSweep 9.5s ease-in-out infinite;
+    }
+
+    @keyframes circuitSweep{
+      0%   { transform: translateX(-7%) translateY(-3%) rotate(-3deg); filter: blur(0.2px); }
+      50%  { transform: translateX(7%)  translateY(3%)  rotate(-3deg); filter: blur(0.3px); }
+      100% { transform: translateX(-7%) translateY(-3%) rotate(-3deg); filter: blur(0.2px); }
+    }
+
+    /* ---------- HEADER ---------- */
+    .header{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:86px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 12px;
+      background: rgba(255,255,255,0.86);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(11,18,32,0.10);
+      z-index:60;
+    }
+
+    .h-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+      min-width:320px;
+    }
+    .profCard{
+      width:60px;
+      height:60px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid rgba(11,18,32,0.14);
+      box-shadow: 0 10px 26px rgba(11,18,32,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;
+      flex:0 0 auto;
+      position:relative;
+      z-index:2;
+    }
+    .bubble{
+      display:inline-block;
+      padding:9px 11px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid rgba(193,18,31,0.35);
+      box-shadow: 0 10px 26px rgba(11,18,32,0.10);
+      font-size:12.5px;
+      font-weight:1000;
+      color:var(--crimson);
+      position:relative;
+      max-width: 260px;
+      line-height:1.15;
+      z-index:2;
+    }
+    .bubble::before{
+      content:"";
+      position:absolute;
+      left:-7px;
+      top:18px;
+      width:12px;
+      height:12px;
+      background:#fff;
+      border-left:1px solid rgba(193,18,31,0.35);
+      border-bottom:1px solid rgba(193,18,31,0.35);
+      transform: rotate(45deg);
+    }
+    .bubble::after{
+      content:"";
+      position:absolute;
+      left:-22px;
+      top:22px;
+      width:16px;
+      height:2px;
+      background: rgba(193,18,31,0.40);
+      border-radius:999px;
+    }
+
+    .h-mid{
+      flex: 1 1 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 560px;
+      gap:14px;
+      z-index:2;
+    }
+
+    /* Title + Subtitle stacked */
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      min-width: 520px;
+    }
+    .brandTitle{
+      margin:0;
+      font-weight:1000;
+      letter-spacing:0.8px;
+      font-size:16px;
+      color:var(--electric);
+      text-transform: uppercase;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      text-shadow: 0 0 18px rgba(43,124,255,0.18);
+      text-align:center;
+      white-space:nowrap;
+    }
+    .brandSubtitle{
+      margin:0;
+      font-size:12.5px;
+      font-weight:950;
+      color: rgba(11,18,32,0.72);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      letter-spacing:0;
+      text-transform:none;
+      text-align:center;
+      white-space:nowrap;
+    }
+
+    /* Legend to the right of the title, 3x2 grid */
+    .legendTop{
+      flex:0 0 auto;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:8px 10px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.78);
+      border:1px solid rgba(11,18,32,0.10);
+      box-shadow: 0 10px 26px rgba(11,18,32,0.08);
+      backdrop-filter: blur(10px);
+      min-width: 330px;
+    }
+    .legendTop .kicker{
+      font-size:12px;
+      font-weight:1000;
+      color:var(--ink);
+      white-space:nowrap;
+      margin-top:2px;
+    }
+    .legendGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-auto-rows: min-content;
+      gap:6px 10px;
+      margin:0;
+      padding:0;
+      list-style:none;
+      align-items:center;
+    }
+    .legendGrid li{
+      font-size:12px;
+      font-weight:950;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .swatch{
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      margin-right:7px;
+      vertical-align:middle;
+      box-shadow: 0 0 10px rgba(11,18,32,0.08);
+    }
+    .s-env{ background: var(--env); }
+    .s-lazy{ background: var(--lazy); }
+    .s-jobs{ background: var(--jobs); }
+    .s-art{ background: var(--art); }
+    .s-corp{ background: var(--corp); }
+    .s-truth{ background: var(--truth); }
+
+    .h-right{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      min-width: 140px;
+      z-index:2;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid rgba(11,18,32,0.16);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.70));
+      color:var(--ink);
+      padding:10px 12px;
+      border-radius:16px;
+      font-size:12px;
+      cursor:pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+      user-select:none;
+      box-shadow: 0 10px 24px rgba(11,18,32,0.10);
+      font-weight:1000;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(11,18,32,0.13);
+      filter: drop-shadow(0 0 12px rgba(43,124,255,0.12));
+    }
+    .btn:active{ transform: translateY(0px) scale(0.99); }
+    .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; filter:none; }
+
+    /* ---------- STAGE ---------- */
+    .stage{
+      position:absolute;
+      inset:86px 0 0 0;
+      overflow:hidden;
+      z-index:2; /* above background layers */
+    }
+    .viewport{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px;
+    }
+
+    /* Chart wrapper with soft halo behind the whole flowchart */
+    .chartWrap{
+      position:relative;
+      width:1320px;
+      height:770px;
+      transform-origin: 50% 25%;
+      transform: scale(0.95);
+      z-index:3;
+    }
+    .chartWrap::before{
+      content:"";
+      position:absolute;
+      inset:-36px -40px -46px -40px;
+      border-radius:40px;
+      z-index:0;
+
+      /* Soft halo: cool blue center + gentle purple edge */
+      background:
+        radial-gradient(700px 420px at 50% 35%,
+          rgba(43,124,255,0.16) 0%,
+          rgba(43,124,255,0.06) 40%,
+          rgba(43,124,255,0.00) 70%),
+        radial-gradient(620px 420px at 55% 60%,
+          rgba(124,58,237,0.10) 0%,
+          rgba(124,58,237,0.00) 70%);
+      filter: blur(1px);
+      opacity:1;
+      pointer-events:none;
+    }
+    /* Put actual chart content above halo */
+    .chartWrap > *{ position:relative; z-index:1; }
+
+    svg.lines{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      overflow:visible;
+      z-index:1;
+    }
+    .line{
+      stroke: var(--line-dim);
+      stroke-width: 3;
+      fill: none;
+      opacity:0.92;
+      transition: stroke 220ms ease, opacity 220ms ease, stroke-width 220ms ease, filter 220ms ease;
+    }
+    .line.active{
+      opacity:1;
+      stroke-width:4;
+      filter: drop-shadow(0 0 10px rgba(11,18,32,0.12));
+    }
+    .line.flow{
+      stroke-dasharray: 10 10;
+      animation: dash 0.9s linear infinite;
+    }
+    @keyframes dash{ to{ stroke-dashoffset: -20; } }
+
+    .nodes{
+      position:absolute;
+      inset:0;
+      z-index:2;
+    }
+    .node{
+      position:absolute;
+      width:156px;
+      height:156px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:14px 16px;
+      color:var(--ink);
+
+      /* Slight translucency so background doesn’t feel “same color as bubbles” */
+      background: radial-gradient(120px 120px at 35% 30%, rgba(255,255,255,0.98), rgba(255,255,255,0.86) 55%, rgba(255,255,255,0.72));
+      border: 1px solid rgba(11,18,32,0.14);
+      box-shadow: 0 10px 26px rgba(11,18,32,0.10);
+      transition: opacity 220ms ease, transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, filter 220ms ease;
+      user-select:none;
+      backdrop-filter: blur(6px);
+    }
+    .node .stack{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      width:100%;
+    }
+    .node .title{
+      font-size:13px;
+      line-height:1.12;
+      font-weight:1000;
+      letter-spacing:0.1px;
+      text-wrap: balance;
+      hyphens:auto;
+    }
+    .node .subtitle{
+      font-size:12px;
+      line-height:1.12;
+      color:var(--muted);
+      font-weight:950;
+      text-wrap: balance;
+      hyphens:auto;
+    }
+    .node .tag{
+      font-size:13px;
+      line-height:1.1;
+      font-weight:1000;
+      color:rgba(11,18,32,0.75);
+    }
+
+    .node.dim{
+      opacity:0.18;
+      filter: grayscale(20%);
+      box-shadow: 0 6px 14px rgba(11,18,32,0.05);
+    }
+    .node.active{
+      opacity:1;
+      border-color: rgba(11,18,32,0.22);
+      box-shadow: 0 16px 34px rgba(11,18,32,0.12);
+    }
+    .node.clickable{ cursor:pointer; }
+    .node.clickable:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 20px 44px rgba(11,18,32,0.15);
+      border-color: rgba(11,18,32,0.30);
+    }
+    .node.locked{
+      cursor:not-allowed;
+      opacity:0.11;
+      filter: grayscale(35%);
+    }
+
+    .glow-env{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(22,163,74,0.24), 0 0 28px rgba(22,163,74,0.10); }
+    .glow-lazy{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(37,99,235,0.22), 0 0 28px rgba(37,99,235,0.10); }
+    .glow-jobs{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(245,158,11,0.24), 0 0 28px rgba(245,158,11,0.10); }
+    .glow-art{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(219,39,119,0.22), 0 0 28px rgba(219,39,119,0.10); }
+    .glow-corp{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(124,58,237,0.22), 0 0 28px rgba(124,58,237,0.10); }
+    .glow-truth{ box-shadow: 0 16px 34px rgba(11,18,32,0.12), 0 0 0 4px rgba(239,68,68,0.20), 0 0 28px rgba(239,68,68,0.10); }
+
+    .node.start{ width:230px; height:230px; padding:16px 18px; }
+    .node.start .title{ font-size:14px; }
+    .node.start .subtitle{ font-size:12px; }
+
+    .node.smallNode{ width:138px; height:138px; padding:12px 14px; }
+    .node.smallNode .title{ font-size:12.5px; }
+    .node.smallNode .subtitle{ font-size:11.5px; }
+
+    .node.outcome{ width:176px; height:176px; }
+    .node.final{ width:206px; height:206px; }
+
+    .hintNote{
+      position:absolute;
+      left:50%;
+      top:10px;
+      transform: translateX(-50%);
+      font-size:12px;
+      color: var(--muted);
+      opacity:0.95;
+      z-index:3;
+      pointer-events:none;
+      text-align:center;
+      width: 980px;
+      font-weight:950;
+    }
+
+    /* ---------- PANEL + NEON ACCENT STRIP ---------- */
+    .panel{
+      position:fixed;
+      right:16px;
+      top:98px;
+      width:390px;
+      max-height: calc(100vh - 118px);
+      background: var(--panel);
+      border: 1px solid var(--panelBorder);
+      border-radius:18px;
+      padding:12px 14px 12px 14px;
+      box-shadow: 0 18px 44px rgba(11,18,32,0.14);
+      backdrop-filter: blur(10px);
+      overflow:auto;
+      z-index:70;
+      display:none;
+    }
+    .panel.show{ display:block; }
+
+    .panel::before{
+      content:"";
+      position:sticky;
+      top:-12px;
+      display:block;
+      height:4px;
+      border-radius:999px;
+      margin:-4px 0 10px 0;
+      background: linear-gradient(90deg, rgba(43,124,255,0.0), var(--panelAccent), rgba(43,124,255,0.0));
+      box-shadow: 0 0 18px var(--panelAccent);
+      transition: background 220ms ease, box-shadow 220ms ease;
+    }
+
+    .panel h2{
+      font-size:14px;
+      margin:2px 0 6px 0;
+      letter-spacing:0.2px;
+      font-weight:1000;
+    }
+    .panel p{
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 10px 0;
+      line-height:1.35;
+      font-weight:950;
+    }
+    .promptLine{
+      margin:10px 0 10px 0;
+      font-size:12px;
+      font-weight:1000;
+      color:var(--ink);
+    }
+
+    .items{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .item{
+      border:1px solid rgba(11,18,32,0.10);
+      background: rgba(255,255,255,0.90);
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .item .q{
+      font-size:13px;
+      color:var(--ink);
+      opacity:0.95;
+      font-weight:1000;
+    }
+    .yn{
+      display:flex;
+      gap:6px;
+      flex:0 0 auto;
+    }
+    .yn button{
+      width:58px;
+      padding:7px 0;
+      border-radius:12px;
+      border:1px solid rgba(11,18,32,0.14);
+      background: rgba(255,255,255,0.88);
+      color:var(--ink);
+      font-size:12px;
+      cursor:pointer;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+      user-select:none;
+      font-weight:1000;
+    }
+    .yn button:hover{
+      background: rgba(11,18,32,0.04);
+      transform: translateY(-1px);
+    }
+    .yn button.selected{
+      background: rgba(11,18,32,0.08);
+      border-color: rgba(11,18,32,0.26);
+      box-shadow: 0 0 0 2px rgba(11,18,32,0.06) inset;
+    }
+
+    .item.pulse{ animation: pulseGlow 0.52s ease-in-out 0s 3; }
+    @keyframes pulseGlow{
+      0%{ box-shadow: 0 0 0 rgba(0,0,0,0); border-color: rgba(11,18,32,0.14); }
+      50%{ box-shadow: 0 0 18px rgba(11,18,32,0.10); border-color: rgba(11,18,32,0.32); }
+      100%{ box-shadow: 0 0 0 rgba(0,0,0,0); border-color: rgba(11,18,32,0.14); }
+    }
+    .pulse.env{ border-color: rgba(22,163,74,0.55); box-shadow: 0 0 24px rgba(22,163,74,0.22); }
+    .pulse.lazy{ border-color: rgba(37,99,235,0.55); box-shadow: 0 0 24px rgba(37,99,235,0.22); }
+    .pulse.jobs{ border-color: rgba(245,158,11,0.60); box-shadow: 0 0 24px rgba(245,158,11,0.22); }
+    .pulse.art{ border-color: rgba(219,39,119,0.60); box-shadow: 0 0 24px rgba(219,39,119,0.20); }
+    .pulse.corp{ border-color: rgba(124,58,237,0.60); box-shadow: 0 0 24px rgba(124,58,237,0.22); }
+    .pulse.truth{ border-color: rgba(239,68,68,0.62); box-shadow: 0 0 24px rgba(239,68,68,0.20); }
+
+    .panel .footer{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      padding-top:10px;
+      border-top:1px solid rgba(11,18,32,0.08);
+    }
+    .panel .footer .hint{
+      margin-right:auto;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:1000;
+    }
+
+    .factBox{
+      margin-top:10px;
+      border-radius:14px;
+      padding:10px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(11,18,32,0.10);
+    }
+    .factBox .kicker{
+      font-size:12px;
+      font-weight:1000;
+      color:var(--ink);
+      margin:0 0 4px 0;
+    }
+    .factBox .fact{
+      font-size:12px;
+      font-weight:950;
+      color:var(--muted);
+      margin:0;
+      line-height:1.35;
+    }
+
+    .node:focus, .btn:focus, .yn button:focus{
+      outline: 2px solid rgba(11,18,32,0.22);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="h-left" aria-label="Professor and speech bubble">
+      <div class="profCard" aria-hidden="true">
+        <svg viewBox="0 0 96 96" width="52" height="52" aria-hidden="true">
+          <circle cx="48" cy="38" r="22" fill="#fff" stroke="#0b1220" stroke-width="2"/>
+          <path d="M28 33 C34 18, 62 18, 68 33" fill="none" stroke="#0b1220" stroke-width="3" stroke-linecap="round"/>
+          <rect x="30" y="34" width="14" height="10" rx="3" fill="none" stroke="#0b1220" stroke-width="2"/>
+          <rect x="52" y="34" width="14" height="10" rx="3" fill="none" stroke="#0b1220" stroke-width="2"/>
+          <path d="M44 39 L52 39" stroke="#0b1220" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="37" cy="39" r="1.6" fill="#0b1220"/>
+          <circle cx="59" cy="39" r="1.6" fill="#0b1220"/>
+          <path d="M38 49 C44 47, 52 47, 58 49" fill="none" stroke="#0b1220" stroke-width="2" stroke-linecap="round"/>
+          <path d="M28 90 C30 74, 40 68, 48 68 C56 68, 66 74, 68 90" fill="#fff" stroke="#0b1220" stroke-width="2"/>
+          <path d="M48 72 L44 76 L48 80 L52 76 Z" fill="#0b1220"/>
+          <path d="M44 76 L34 72 L34 80 Z" fill="#0b1220"/>
+          <path d="M52 76 L62 72 L62 80 Z" fill="#0b1220"/>
+        </svg>
+      </div>
+      <div class="bubble">“I refuse to use AI on moral grounds!”</div>
+    </div>
+
+    <div class="h-mid" aria-label="Title and legend">
+      <div class="titleBlock" aria-label="Title block">
+        <p class="brandTitle">AI Condemnation Stress Test</p>
+        <p class="brandSubtitle">Ain’t no policy debate: just a consistency check.</p>
+      </div>
+
+      <div class="legendTop" aria-label="Legend">
+        <div class="kicker">choose your hill</div>
+        <ul class="legendGrid">
+          <li><span class="swatch s-env"></span>Environmental</li>
+          <li><span class="swatch s-lazy"></span>Intellectual</li>
+          <li><span class="swatch s-jobs"></span>Jobs</li>
+          <li><span class="swatch s-art"></span>Art</li>
+          <li><span class="swatch s-corp"></span>Corporate</li>
+          <li><span class="swatch s-truth"></span>Bias</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="h-right">
+      <button class="btn" id="restartBtn">Restart</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="viewport">
+      <div id="chart" class="chartWrap" aria-label="Flowchart">
+        <div class="hintNote">Everything is visible. Start at the top. One condemnation at a time.</div>
+
+        <svg class="lines" viewBox="0 0 1320 770" preserveAspectRatio="none" aria-hidden="true">
+          <!-- Start -> objections -->
+          <path id="l-start-env"   class="line" d="M660 195 C 610 245, 505 255, 240 305" />
+          <path id="l-start-lazy"  class="line" d="M660 195 C 640 245, 605 255, 390 310" />
+          <path id="l-start-jobs"  class="line" d="M660 195 C 680 245, 715 255, 540 310" />
+          <path id="l-start-art"   class="line" d="M660 195 C 720 245, 785 255, 690 310" />
+          <path id="l-start-corp"  class="line" d="M660 195 C 770 245, 905 255, 825 310" />
+          <path id="l-start-truth" class="line" d="M660 195 C 825 245, 1005 255, 960 305" />
+
+          <!-- Objection -> checklist/step -->
+          <path id="l-env-chk"   class="line" d="M240 355 C 240 430, 240 450, 240 505" />
+          <path id="l-lazy-chk"  class="line" d="M390 360 C 390 430, 390 450, 390 505" />
+          <path id="l-jobs-chk"  class="line" d="M540 360 C 540 430, 540 450, 540 505" />
+          <path id="l-art-chk"   class="line" d="M690 360 C 690 430, 690 450, 690 505" />
+          <path id="l-corp-chk"  class="line" d="M825 360 C 825 430, 825 450, 825 505" />
+          <path id="l-truth-chk" class="line" d="M960 355 C 960 430, 960 450, 960 505" />
+
+          <!-- Corporate step1 -> step2 and fail -->
+          <path id="l-corp1-corp2" class="line" d="M845 505 C 925 545, 940 610, 915 670" />
+          <path id="l-corp1-fail"  class="line" d="M845 505 C 760 610, 520 650, 260 690" />
+
+          <!-- Fail lines -->
+          <path id="l-env-fail"   class="line" d="M240 555 C 240 640, 240 660, 260 690" />
+          <path id="l-lazy-fail"  class="line" d="M390 555 C 350 640, 300 660, 260 690" />
+          <path id="l-jobs-fail"  class="line" d="M540 555 C 450 640, 340 660, 260 690" />
+          <path id="l-art-fail"   class="line" d="M690 555 C 520 640, 360 660, 260 690" />
+          <path id="l-truth-fail" class="line" d="M960 555 C 760 650, 460 660, 260 690" />
+          <path id="l-corp2-fail" class="line" d="M915 725 C 780 755, 520 750, 260 690" />
+
+          <!-- Success lines -->
+          <path id="l-env-succ"   class="line" d="M240 555 C 380 635, 570 655, 1000 690" />
+          <path id="l-lazy-succ"  class="line" d="M390 555 C 490 635, 650 655, 1000 690" />
+          <path id="l-jobs-succ"  class="line" d="M540 555 C 610 635, 720 655, 1000 690" />
+          <path id="l-art-succ"   class="line" d="M690 555 C 740 635, 820 655, 1000 690" />
+          <path id="l-truth-succ" class="line" d="M960 555 C 980 635, 1010 660, 1000 690" />
+          <path id="l-corp2-succ" class="line" d="M915 725 C 915 735, 1020 730, 1000 690" />
+        </svg>
+
+        <div class="nodes" id="nodes">
+          <div class="node start active clickable" id="n-start" style="left:545px; top:150px;" role="button" tabindex="0">
+            <div class="stack">
+              <div class="title">I strenuously object to AI because…</div>
+              <div class="subtitle">click to begin</div>
+            </div>
+          </div>
+
+          <!-- Objections row -->
+          <div class="node dim" id="n-env" style="left:165px; top:270px;">
+            <div class="stack"><div class="title">Environmental impact</div><div class="subtitle">Planet vibes</div><div class="tag">🌎</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-lazy" style="left:320px; top:280px;">
+            <div class="stack"><div class="title">Intellectual laziness</div><div class="subtitle">Brain outsourcing</div><div class="tag">🧠</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-jobs" style="left:470px; top:280px;">
+            <div class="stack"><div class="title">Job destruction</div><div class="subtitle">Automation panic</div><div class="tag">🧰</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-art" style="left:620px; top:280px;">
+            <div class="stack"><div class="title">Artistic exploitation</div><div class="subtitle">Pay the humans</div><div class="tag">🎨</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-corp" style="left:755px; top:280px;">
+            <div class="stack"><div class="title">Corporate power</div><div class="subtitle">Concentration</div><div class="tag">🏢</div></div>
+          </div>
+          <div class="node dim" id="n-truth" style="left:880px; top:270px;">
+            <div class="stack"><div class="title">Hallucination &amp; bias</div><div class="subtitle">Truth anxiety</div><div class="tag">🧯</div></div>
+          </div>
+
+          <!-- Checklist / step row -->
+          <div class="node dim smallNode" id="n-env-chk" style="left:175px; top:475px;">
+            <div class="stack"><div class="title">Environmental impact selected.</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-lazy-chk" style="left:320px; top:475px;">
+            <div class="stack"><div class="title">Cognitive outsourcing selected.</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-jobs-chk" style="left:470px; top:475px;">
+            <div class="stack"><div class="title">Automation concern selected.</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-art-chk" style="left:620px; top:475px;">
+            <div class="stack"><div class="title">Compensation principle selected.</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-corp-1" style="left:755px; top:475px;">
+            <div class="stack"><div class="title">Corporate concentration selected.</div><div class="subtitle">Hard mode</div><div class="tag">⚙️</div></div>
+          </div>
+          <div class="node dim smallNode" id="n-truth-chk" style="left:890px; top:475px;">
+            <div class="stack"><div class="title">Hallucination &amp; bias selected.</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+
+          <div class="node dim smallNode" id="n-corp-2" style="left:865px; top:665px;">
+            <div class="stack"><div class="title">Okay—then also:</div><div class="subtitle">Checklist</div><div class="tag">☑️</div></div>
+          </div>
+
+          <div class="node dim outcome" id="n-fail" style="left:180px; top:620px;">
+            <div class="stack"><div class="title">Outcome</div><div class="subtitle">Appears here</div><div class="tag">⬇️</div></div>
+          </div>
+          <div class="node dim outcome" id="n-succ" style="left:930px; top:620px;">
+            <div class="stack"><div class="title">Consistent position detected.</div><div class="subtitle">Not AI-specific.</div><div class="tag">✅</div></div>
+          </div>
+
+          <!-- Final slot: same position, mutually exclusive -->
+          <div class="node dim final" id="n-final-success" style="left:557px; top:580px;">
+            <div class="stack">
+              <div class="title">Congratulations!</div>
+              <div class="subtitle">You apply your principle broadly.</div>
+              <div class="subtitle">Proceed with clean conscience.</div>
+            </div>
+          </div>
+
+          <div class="node dim final" id="n-final-neutral" style="left:557px; top:580px;">
+            <div class="stack">
+              <div class="title">Congratulations!</div>
+              <div class="subtitle">You’re no longer inconsistent:</div>
+              <div class="subtitle">it’s okay to simply dislike AI.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+
+  <script>
+    const BRANCHES = {
+      env:   { key:'env',   colorVar:'--env',   classGlow:'glow-env'   },
+      lazy:  { key:'lazy',  colorVar:'--lazy',  classGlow:'glow-lazy'  },
+      jobs:  { key:'jobs',  colorVar:'--jobs',  classGlow:'glow-jobs'  },
+      art:   { key:'art',   colorVar:'--art',   classGlow:'glow-art'   },
+      corp:  { key:'corp',  colorVar:'--corp',  classGlow:'glow-corp'  },
+      truth: { key:'truth', colorVar:'--truth', classGlow:'glow-truth' }
+    };
+
+    const INTRO_LINE = "Honest moment: do you do any of these?";
+
+    const FUN_FACTS = {
+      env:
+        "Fun Fact: Streaming 30–60 minutes of HD video typically uses far more electricity (and cooling water) than generating multiple AI images.",
+      lazy:
+        "Fun Fact: Google was once accused of “destroying learning.” Studies show that AI tools can actually increase learning effectiveness significantly.",
+      jobs:
+        "Fun Fact: ATMs were supposed to eliminate bank tellers. For decades after they spread, the number of tellers actually increased. This is known as Jevons Paradox and is a well-known phenomenon in economics.",
+      art:
+        "Fun Fact: Search engines have been indexing artists’ work for decades without individual consent. (Okay, that’s not really fun.)",
+      corp:
+        "Fun Fact: AI runs on the same cloud infrastructure that already dominates search, email, and mobile platforms. (Also not fun.)",
+      truth:
+        "Fun fact: AI bias can be measured and corrected at scale. Human bias often goes unnoticed and uncorrected. We need ‘human in the loop” judgment and ethics more than ever!"
+    };
+
+    const CHECKLISTS = {
+      env: {
+        title: "Environmental impact selected. 🌎",
+        intro: INTRO_LINE,
+        items: ["Eat beef?", "Fly (even sometimes)?", "Stream video?", "Drive a lot?", "Cloud storage?"]
+      },
+      lazy: {
+        title: "Cognitive outsourcing selected. 🧠",
+        intro: INTRO_LINE,
+        items: ["Google things?", "Use spellcheck?", "Use GPS?", "Use calculators?"]
+      },
+      jobs: {
+        title: "Automation concern selected. 🧰",
+        intro: INTRO_LINE,
+        items: ["ATMs?", "Self-checkout?", "Excel?", "Power tools?"]
+      },
+      art: {
+        title: "Compensation principle selected. 🎨",
+        intro: INTRO_LINE,
+        items: [
+          "Shared a streaming password?",
+          "Downloaded a paywalled article?",
+          "Streamed music instead of buying albums?",
+          "Used images without checking licensing?"
+        ]
+      },
+      truth: {
+        title: "Hallucination & bias selected. 🧯",
+        intro: INTRO_LINE,
+        items: [
+          "Share headlines without reading the article?",
+          "Rely on social media feeds to stay informed?",
+          "Repeat “I heard that…” as evidence?",
+          "Trust product reviews without checking anything else?",
+          "Assume your first impression of people is usually right?"
+        ]
+      },
+      corp2: {
+        title: "Okay—then also: 🏢",
+        intro: INTRO_LINE,
+        items: ["Uber / DoorDash?", "Big-box retail?", "Streaming subscriptions?", "App store ecosystems?"]
+      }
+    };
+
+    const state = {
+      step: "idle",
+      selectedBranch: null,
+      answers: {},
+      corpAvoidBig5: null
+    };
+
+    const el = {
+      panel: document.getElementById('panel'),
+      restartBtn: document.getElementById('restartBtn'),
+      nodes: {
+        start: document.getElementById('n-start'),
+        env: document.getElementById('n-env'),
+        lazy: document.getElementById('n-lazy'),
+        jobs: document.getElementById('n-jobs'),
+        art: document.getElementById('n-art'),
+        corp: document.getElementById('n-corp'),
+        truth: document.getElementById('n-truth'),
+        envChk: document.getElementById('n-env-chk'),
+        lazyChk: document.getElementById('n-lazy-chk'),
+        jobsChk: document.getElementById('n-jobs-chk'),
+        artChk: document.getElementById('n-art-chk'),
+        corp1: document.getElementById('n-corp-1'),
+        corp2: document.getElementById('n-corp-2'),
+        truthChk: document.getElementById('n-truth-chk'),
+        fail: document.getElementById('n-fail'),
+        succ: document.getElementById('n-succ'),
+        finalSuccess: document.getElementById('n-final-success'),
+        finalNeutral: document.getElementById('n-final-neutral'),
+      },
+      lines: {
+        start_env: document.getElementById('l-start-env'),
+        start_lazy: document.getElementById('l-start-lazy'),
+        start_jobs: document.getElementById('l-start-jobs'),
+        start_art: document.getElementById('l-start-art'),
+        start_corp: document.getElementById('l-start-corp'),
+        start_truth: document.getElementById('l-start-truth'),
+        env_chk: document.getElementById('l-env-chk'),
+        lazy_chk: document.getElementById('l-lazy-chk'),
+        jobs_chk: document.getElementById('l-jobs-chk'),
+        art_chk: document.getElementById('l-art-chk'),
+        corp_chk: document.getElementById('l-corp-chk'),
+        truth_chk: document.getElementById('l-truth-chk'),
+        corp1_corp2: document.getElementById('l-corp1-corp2'),
+        corp1_fail: document.getElementById('l-corp1-fail'),
+        env_fail: document.getElementById('l-env-fail'),
+        lazy_fail: document.getElementById('l-lazy-fail'),
+        jobs_fail: document.getElementById('l-jobs-fail'),
+        art_fail: document.getElementById('l-art-fail'),
+        truth_fail: document.getElementById('l-truth-fail'),
+        corp2_fail: document.getElementById('l-corp2-fail'),
+        env_succ: document.getElementById('l-env-succ'),
+        lazy_succ: document.getElementById('l-lazy-succ'),
+        jobs_succ: document.getElementById('l-jobs-succ'),
+        art_succ: document.getElementById('l-art-succ'),
+        truth_succ: document.getElementById('l-truth-succ'),
+        corp2_succ: document.getElementById('l-corp2-succ'),
+      }
+    };
+
+    function cssVar(name){
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    function setPanelAccent(branchKey){
+      if(!branchKey){
+        document.documentElement.style.setProperty('--panelAccent', 'rgba(43,124,255,0.35)');
+        return;
+      }
+      const c = cssVar(BRANCHES[branchKey].colorVar);
+      document.documentElement.style.setProperty('--panelAccent', c);
+    }
+
+    function showPanel(html){
+      el.panel.innerHTML = html;
+      el.panel.classList.add('show');
+    }
+    function hidePanel(){
+      el.panel.classList.remove('show');
+      el.panel.innerHTML = '';
+    }
+
+    function resetLinesToBase(){
+      Object.values(el.lines).forEach(l => {
+        l.classList.remove('active','flow');
+        l.style.stroke = cssVar('--line-dim');
+      });
+    }
+
+    function clearNodeStates(){
+      Object.values(el.nodes).forEach(n => {
+        n.classList.add('dim');
+        n.classList.remove('active','clickable','locked');
+        n.classList.remove('glow-env','glow-lazy','glow-jobs','glow-art','glow-corp','glow-truth');
+      });
+    }
+
+    function resetFinalSlot(){
+      el.nodes.finalSuccess.classList.add('dim');
+      el.nodes.finalNeutral.classList.add('dim');
+      el.nodes.finalSuccess.classList.remove('active','glow-env','glow-lazy','glow-jobs','glow-art','glow-corp','glow-truth');
+      el.nodes.finalNeutral.classList.remove('active','glow-env','glow-lazy','glow-jobs','glow-art','glow-corp','glow-truth');
+    }
+
+    function resetAll(){
+      state.step = "idle";
+      state.selectedBranch = null;
+      state.answers = {};
+      state.corpAvoidBig5 = null;
+
+      clearNodeStates();
+      resetFinalSlot();
+
+      el.nodes.start.classList.remove('dim');
+      el.nodes.start.classList.add('active','clickable');
+
+      resetLinesToBase();
+      hidePanel();
+      setPanelAccent(null);
+    }
+
+    function enableObjections(){
+      state.step = "objectionsEnabled";
+      ['env','lazy','jobs','art','corp','truth'].forEach(key => {
+        const node = el.nodes[key];
+        node.classList.remove('dim','locked');
+        node.classList.add('active','clickable', BRANCHES[key].classGlow);
+      });
+    }
+
+    function lockOtherBranches(selected){
+      ['env','lazy','jobs','art','corp','truth'].forEach(key => {
+        const node = el.nodes[key];
+        if(key !== selected){
+          node.classList.remove('clickable','active');
+          node.classList.add('locked');
+        } else {
+          node.classList.add('active');
+          node.classList.remove('locked');
+        }
+      });
+    }
+
+    function colorizeLine(lineEl, branchKey){
+      const color = cssVar(BRANCHES[branchKey].colorVar);
+      lineEl.style.stroke = color;
+      lineEl.classList.add('active','flow');
+    }
+    function colorizeNode(nodeEl, branchKey){
+      nodeEl.classList.add('active', BRANCHES[branchKey].classGlow);
+      nodeEl.classList.remove('dim');
+    }
+
+    function activatePath(branchKey, stage){
+      colorizeLine(el.lines[`start_${branchKey}`], branchKey);
+      colorizeNode(el.nodes[branchKey], branchKey);
+
+      if(branchKey !== 'corp'){
+        colorizeLine(el.lines[`${branchKey}_chk`], branchKey);
+
+        const chkNode =
+          (branchKey === 'truth') ? el.nodes.truthChk :
+          (branchKey === 'env') ? el.nodes.envChk :
+          (branchKey === 'lazy') ? el.nodes.lazyChk :
+          (branchKey === 'jobs') ? el.nodes.jobsChk :
+          el.nodes.artChk;
+
+        colorizeNode(chkNode, branchKey);
+
+        if(stage === 'fail'){
+          colorizeLine(el.lines[`${branchKey}_fail`], branchKey);
+          colorizeNode(el.nodes.fail, branchKey);
+        }
+        if(stage === 'succ'){
+          colorizeLine(el.lines[`${branchKey}_succ`], branchKey);
+          colorizeNode(el.nodes.succ, branchKey);
+        }
+      } else {
+        colorizeLine(el.lines.corp_chk, branchKey);
+        colorizeNode(el.nodes.corp1, branchKey);
+
+        if(stage === 'corp2'){
+          colorizeLine(el.lines.corp1_corp2, branchKey);
+          colorizeNode(el.nodes.corp2, branchKey);
+        }
+        if(stage === 'fail'){
+          colorizeLine(el.lines.corp1_corp2, branchKey);
+          colorizeNode(el.nodes.corp2, branchKey);
+          colorizeLine(el.lines.corp2_fail, branchKey);
+          colorizeNode(el.nodes.fail, branchKey);
+        }
+        if(stage === 'succ'){
+          colorizeLine(el.lines.corp1_corp2, branchKey);
+          colorizeNode(el.nodes.corp2, branchKey);
+          colorizeLine(el.lines.corp2_succ, branchKey);
+          colorizeNode(el.nodes.succ, branchKey);
+        }
+      }
+    }
+
+    function openChecklistPanel(branchKey){
+      state.answers = {};
+      const cfg = CHECKLISTS[branchKey];
+
+      const itemsHtml = cfg.items.map((q, idx) => `
+        <div class="item" data-idx="${idx}">
+          <div class="q">${escapeHtml(q)}</div>
+          <div class="yn">
+            <button class="yes" data-ans="yes" data-idx="${idx}">YES</button>
+            <button class="no" data-ans="no" data-idx="${idx}">NO</button>
+          </div>
+        </div>
+      `).join('');
+
+      showPanel(`
+        <h2>${escapeHtml(cfg.title)}</h2>
+        <div class="promptLine">${escapeHtml(cfg.intro || INTRO_LINE)}</div>
+        <div class="items">${itemsHtml}</div>
+        <div class="footer">
+          <div class="hint" id="panelHint">Answer each item to continue.</div>
+          <button class="btn" id="continueBtn" disabled>Continue</button>
+        </div>
+      `);
+
+      wireYesNoButtons(cfg.items.length, () => evaluateChecklist(branchKey, cfg.items.length));
+    }
+
+    function wireYesNoButtons(itemCount, onContinue){
+      const items = Array.from(el.panel.querySelectorAll('.item'));
+      const cont = document.getElementById('continueBtn');
+      const hint = document.getElementById('panelHint');
+
+      function updateContinue(){
+        const answered = Object.keys(state.answers).length;
+        cont.disabled = answered < itemCount;
+        hint.textContent = (answered < itemCount) ? "Answer each item to continue." : "Continue when ready.";
+      }
+
+      items.forEach(itemEl => {
+        const idx = Number(itemEl.getAttribute('data-idx'));
+        const yesBtn = itemEl.querySelector('button.yes');
+        const noBtn = itemEl.querySelector('button.no');
+
+        function select(ans){
+          state.answers[idx] = ans;
+          yesBtn.classList.toggle('selected', ans === 'yes');
+          noBtn.classList.toggle('selected', ans === 'no');
+          updateContinue();
+        }
+        yesBtn.addEventListener('click', () => select('yes'));
+        noBtn.addEventListener('click', () => select('no'));
+      });
+
+      updateContinue();
+      cont.addEventListener('click', onContinue);
+    }
+
+    function countYes(){
+      return Object.values(state.answers).filter(v => v === 'yes').length;
+    }
+
+    function thresholds(itemCount){
+      const partialMax = (itemCount >= 5) ? 2 : 1;
+      const failMin = partialMax + 1;
+      return { partialMax, failMin };
+    }
+
+    async function pulseYesItems(branchKeyForPulse){
+      const items = Array.from(el.panel.querySelectorAll('.item'));
+      const yesIdxs = Object.entries(state.answers)
+        .filter(([_, v]) => v === 'yes')
+        .map(([k]) => Number(k));
+
+      yesIdxs.forEach(idx => {
+        const item = items.find(it => Number(it.getAttribute('data-idx')) === idx);
+        if(item) item.classList.add('pulse', branchKeyForPulse);
+      });
+
+      await sleep(1100);
+
+      yesIdxs.forEach(idx => {
+        const item = items.find(it => Number(it.getAttribute('data-idx')) === idx);
+        if(item) item.classList.remove('pulse', branchKeyForPulse);
+      });
+    }
+
+    function funFactFor(branchKey){
+      const b = (branchKey === 'corp2') ? 'corp' : branchKey;
+      return FUN_FACTS[b] || "Fun Fact: The universe is large and your browser cache is larger.";
+    }
+
+    async function evaluateChecklist(branchKey, itemCount){
+      const yesCount = countYes();
+      const pulseClass = (branchKey === 'corp2') ? 'corp' : branchKey;
+      const { partialMax } = thresholds(itemCount);
+
+      if(yesCount === 0){
+        successOutcome(branchKey);
+        return;
+      }
+      if(yesCount > 0 && yesCount <= partialMax){
+        partialOutcome(branchKey);
+        return;
+      }
+
+      await pulseYesItems(pulseClass);
+      failOutcome(branchKey);
+    }
+
+    function failOutcome(branchKey, opts = {}){
+      state.step = "outcome";
+      resetLinesToBase();
+      resetFinalSlot();
+
+      const b = (branchKey === 'corp2') ? 'corp' : branchKey;
+
+      if(b !== 'corp'){
+        activatePath(b, 'fail');
+      } else {
+        if(opts.from === 'corp1'){
+          colorizeLine(el.lines.start_corp, 'corp');
+          colorizeNode(el.nodes.corp, 'corp');
+          colorizeLine(el.lines.corp_chk, 'corp');
+          colorizeNode(el.nodes.corp1, 'corp');
+
+          colorizeLine(el.lines.corp1_fail, 'corp');
+          colorizeNode(el.nodes.fail, 'corp');
+        } else {
+          activatePath('corp', 'fail');
+        }
+      }
+
+      showPanel(`
+        <h2>AI-specific exception identified.</h2>
+        <p>Sorry. Please try again.</p>
+
+        <div class="factBox">
+          <p class="kicker">Fun Fact!</p>
+          <p class="fact">${escapeHtml(funFactFor(branchKey))}</p>
+        </div>
+
+        <div class="footer" style="border-top:none; padding-top:10px;">
+          <div class="hint"></div>
+          <button class="btn" id="tryHonestBtn">Try: “I just don’t like it!”</button>
+        </div>
+      `);
+
+      document.getElementById('tryHonestBtn').addEventListener('click', () => {
+        neutralFinal(b);
+      });
+    }
+
+    function partialOutcome(branchKey){
+      state.step = "outcome";
+      resetLinesToBase();
+      resetFinalSlot();
+
+      const b = (branchKey === 'corp2') ? 'corp' : branchKey;
+
+      if(b !== 'corp'){
+        activatePath(b, 'fail');
+      } else {
+        colorizeLine(el.lines.start_corp, 'corp');
+        colorizeNode(el.nodes.corp, 'corp');
+        colorizeLine(el.lines.corp_chk, 'corp');
+        colorizeNode(el.nodes.corp1, 'corp');
+        colorizeLine(el.lines.corp1_corp2, 'corp');
+        colorizeNode(el.nodes.corp2, 'corp');
+        colorizeLine(el.lines.corp2_fail, 'corp');
+        colorizeNode(el.nodes.fail, 'corp');
+      }
+
+      showPanel(`
+        <h2>Partial mismatch detected.</h2>
+        <p>Simmer down or tighten up.</p>
+        <div class="footer" style="border-top:none; padding-top:0;">
+          <div class="hint"></div>
+          <button class="btn" id="tryAgainBtn">Try again</button>
+          <button class="btn" id="tryHonestBtn">Try: “I just don’t like it!”</button>
+        </div>
+      `);
+
+      document.getElementById('tryAgainBtn').addEventListener('click', () => {
+        if(b === 'corp' && branchKey === 'corp2'){
+          resetLinesToBase();
+          colorizeLine(el.lines.start_corp, 'corp');
+          colorizeNode(el.nodes.corp, 'corp');
+          colorizeLine(el.lines.corp_chk, 'corp');
+          colorizeNode(el.nodes.corp1, 'corp');
+          colorizeLine(el.lines.corp1_corp2, 'corp');
+          colorizeNode(el.nodes.corp2, 'corp');
+          openChecklistPanel('corp2');
+        } else if(b === 'corp'){
+          resetLinesToBase();
+          colorizeLine(el.lines.start_corp, 'corp');
+          colorizeNode(el.nodes.corp, 'corp');
+          colorizeLine(el.lines.corp_chk, 'corp');
+          colorizeNode(el.nodes.corp1, 'corp');
+          openCorporateStep1Panel();
+        } else {
+          resetLinesToBase();
+          activatePath(b, 'objection');
+          openChecklistPanel(b);
+        }
+      });
+
+      document.getElementById('tryHonestBtn').addEventListener('click', () => {
+        neutralFinal(b);
+      });
+    }
+
+    function successOutcome(branchKey){
+      state.step = "outcome";
+      resetLinesToBase();
+      resetFinalSlot();
+
+      const b = (branchKey === 'corp2') ? 'corp' : branchKey;
+
+      activatePath(b, 'succ');
+
+      showPanel(`
+        <h2>Consistent position detected.</h2>
+        <p>Your objection isn’t AI-specific.</p>
+        <div class="footer" style="border-top:none; padding-top:0;">
+          <div class="hint"></div>
+          <button class="btn" id="toFinalBtn">Continue</button>
+        </div>
+      `);
+
+      document.getElementById('toFinalBtn').addEventListener('click', () => {
+        successFinal(b);
+      });
+    }
+
+    function successFinal(branchKey){
+      state.step = "final";
+      resetLinesToBase();
+
+      el.nodes.finalNeutral.classList.add('dim');
+      el.nodes.finalSuccess.classList.remove('dim');
+      el.nodes.finalSuccess.classList.add('active', BRANCHES[branchKey].classGlow);
+
+      hidePanel();
+    }
+
+    function neutralFinal(branchKey){
+      state.step = "final";
+      resetLinesToBase();
+
+      el.nodes.finalSuccess.classList.add('dim');
+      el.nodes.finalNeutral.classList.remove('dim');
+      el.nodes.finalNeutral.classList.add('active', BRANCHES[branchKey].classGlow);
+
+      hidePanel();
+    }
+
+    function openCorporateStep1Panel(){
+      state.corpAvoidBig5 = null;
+
+      showPanel(`
+        <h2>Corporate concentration selected. 🏢</h2>
+        <p>Do you actively avoid the Big 5?<br/><span style="color: var(--muted); font-weight:950;">Amazon / Apple / Google / Meta / Microsoft</span></p>
+        <div class="promptLine">Honest moment: do you actually do that?</div>
+        <div class="items">
+          <div class="item" data-idx="corp1">
+            <div class="q">Do you actively avoid the Big 5?</div>
+            <div class="yn">
+              <button class="yes" id="corpBig5Yes">YES</button>
+              <button class="no" id="corpBig5No">NO</button>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="hint" id="panelHint">Pick one.</div>
+          <button class="btn" id="continueBtn" disabled>Continue</button>
+        </div>
+      `);
+
+      const yesBtn = document.getElementById('corpBig5Yes');
+      const noBtn = document.getElementById('corpBig5No');
+      const cont = document.getElementById('continueBtn');
+      const item = el.panel.querySelector('.item');
+      const hint = document.getElementById('panelHint');
+
+      function select(which){
+        state.corpAvoidBig5 = which;
+        yesBtn.classList.toggle('selected', which==='yes');
+        noBtn.classList.toggle('selected', which==='no');
+        cont.disabled = false;
+        hint.textContent = "Continue when ready.";
+      }
+      yesBtn.addEventListener('click', () => select('yes'));
+      noBtn.addEventListener('click', () => select('no'));
+
+      cont.addEventListener('click', async () => {
+        if(state.corpAvoidBig5 === 'no'){
+          item.classList.add('pulse','corp');
+          await sleep(520);
+          item.classList.remove('pulse','corp');
+          failOutcome('corp', { from:'corp1' });
+        } else {
+          resetLinesToBase();
+          colorizeLine(el.lines.start_corp, 'corp');
+          colorizeNode(el.nodes.corp, 'corp');
+          colorizeLine(el.lines.corp_chk, 'corp');
+          colorizeNode(el.nodes.corp1, 'corp');
+          colorizeLine(el.lines.corp1_corp2, 'corp');
+          colorizeNode(el.nodes.corp2, 'corp');
+          openChecklistPanel('corp2');
+        }
+      });
+    }
+
+    function chooseBranch(branchKey){
+      if(state.step !== "objectionsEnabled") return;
+
+      state.step = "branchLocked";
+      state.selectedBranch = branchKey;
+
+      lockOtherBranches(branchKey);
+
+      resetLinesToBase();
+      resetFinalSlot();
+
+      setPanelAccent(branchKey);
+
+      if(branchKey === 'corp'){
+        colorizeLine(el.lines.start_corp, 'corp');
+        colorizeNode(el.nodes.corp, 'corp');
+        colorizeLine(el.lines.corp_chk, 'corp');
+        colorizeNode(el.nodes.corp1, 'corp');
+        openCorporateStep1Panel();
+      } else {
+        activatePath(branchKey, 'objection');
+        openChecklistPanel(branchKey);
+      }
+    }
+
+    function wireObjectionClicks(){
+      ['env','lazy','jobs','art','corp','truth'].forEach(key => {
+        const node = el.nodes[key];
+        node.addEventListener('click', () => chooseBranch(key));
+        node.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') chooseBranch(key);
+        });
+        node.setAttribute('role', 'button');
+        node.setAttribute('tabindex', '0');
+      });
+    }
+
+    function onStart(){
+      if(state.step !== "idle") return;
+      enableObjections();
+      wireObjectionClicks();
+    }
+
+    function wireStart(){
+      el.nodes.start.addEventListener('click', onStart);
+      el.nodes.start.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') onStart();
+      });
+    }
+
+    el.restartBtn.addEventListener('click', resetAll);
+
+    (function init(){
+      resetAll();
+      wireStart();
+    })();
+  </script>
+</body>
+</html>
